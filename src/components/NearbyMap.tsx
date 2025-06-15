@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { activities } from "../data/activities";
+import { nearby } from "../data/nearby.js";
 
 const NearbyMap: React.FC = () => {
   const [activeNode, setActiveNode] = useState<string | null>(null);
@@ -21,106 +21,25 @@ const NearbyMap: React.FC = () => {
     };
   }, []);
 
-  const nedumNode = activities.find(a => a.id === "nedum");
-  const destinationNodes = activities.filter(a => a.id !== "nedum");
+  const nedumNode = nearby.find(a => a.id === "nedumkandam");
+  const destinationNodes = nearby.filter(a => a.id !== "nedumkandam");
 
-  // === Enhanced responsive path generation ===
   const generatePath = (destination: any) => {
-    if (!nedumNode || destination.id === "nedum") return "";
-    const startX = 50;
-    const startY = 60;
-    let pathString = "";
+    if (!nedumNode || destination.id === "nedumkandam") return "";
 
-    // Responsive path adjustments
-    const mobileOffset = isMobile ? 2 : 0;
-    const curveIntensity = isMobile ? 0.8 : 1;
+    const startX = parseFloat(nedumNode.coords.left);
+    const startY = parseFloat(nedumNode.coords.top);
+    const endX = parseFloat(destination.coords.left);
+    const endY = parseFloat(destination.coords.top);
 
-    switch (destination.id) {
-      case "munnar":
-        // Path going up and left - responsive positioning
-        const munnarEndX = isMobile ? 22 : 20;
-        const munnarEndY = isMobile ? 18 : 15;
-        pathString = `M ${startX} ${startY} 
-                     Q ${45 - mobileOffset} ${50 * curveIntensity}, ${40 - mobileOffset} ${40 * curveIntensity} 
-                     Q ${35 - mobileOffset} ${30 * curveIntensity}, ${30 - mobileOffset} ${25 * curveIntensity} 
-                     Q ${25 - mobileOffset} ${20 * curveIntensity}, ${munnarEndX} ${munnarEndY}`;
-        break;
-      case "thekkady":
-        // Path going down and right - responsive positioning
-        const thekkadyEndX = isMobile ? 83 : 85;
-        const thekkadyEndY = isMobile ? 83 : 85;
-        pathString = `M ${startX} ${startY} 
-                     Q ${60 + mobileOffset} ${65 * curveIntensity}, ${70 + mobileOffset} ${70 * curveIntensity} 
-                     Q ${75 + mobileOffset} ${75 * curveIntensity}, ${80 + mobileOffset} ${80 * curveIntensity} 
-                     Q ${82 + mobileOffset} ${82 * curveIntensity}, ${thekkadyEndX} ${thekkadyEndY}`;
-        break;
-      case "ramakkalmedu":
-        // Path going right and slightly up - responsive positioning
-        const ramakkalmeduEndX = isMobile ? 83 : 85;
-        const ramakkalmeduEndY = isMobile ? 47 : 45;
-        pathString = `M ${startX} ${startY} 
-                     Q ${58 + mobileOffset} ${58 * curveIntensity}, ${65 + mobileOffset} ${55 * curveIntensity} 
-                     Q ${72 + mobileOffset} ${52 * curveIntensity}, ${78 + mobileOffset} ${48 * curveIntensity} 
-                     Q ${82 + mobileOffset} ${46 * curveIntensity}, ${ramakkalmeduEndX} ${ramakkalmeduEndY}`;
-        break;
-      case "vagamon":
-        // Path going down and left - responsive positioning
-        const vagamonEndX = isMobile ? 17 : 15;
-        const vagamonEndY = isMobile ? 90 : 92;
-        pathString = `M ${startX} ${startY} 
-                     Q ${42 - mobileOffset} ${68 * curveIntensity}, ${35 - mobileOffset} ${75 * curveIntensity} 
-                     Q ${28 - mobileOffset} ${82 * curveIntensity}, ${22 - mobileOffset} ${88 * curveIntensity} 
-                     Q ${18 - mobileOffset} ${90 * curveIntensity}, ${vagamonEndX} ${vagamonEndY}`;
-        break;
-      case "idukki-dam":
-        // Path going left and slightly up - responsive positioning
-        const idukkiEndX = isMobile ? 17 : 15;
-        const idukkiEndY = isMobile ? 42 : 40;
-        pathString = `M ${startX} ${startY} 
-                     Q ${42 - mobileOffset} ${58 * curveIntensity}, ${35 - mobileOffset} ${55 * curveIntensity} 
-                     Q ${28 - mobileOffset} ${52 * curveIntensity}, ${22 - mobileOffset} ${48 * curveIntensity} 
-                     Q ${18 - mobileOffset} ${44 * curveIntensity}, ${idukkiEndX} ${idukkiEndY}`;
-        break;
-      default:
-        return "";
-    }
-    
-    return pathString;
-  };
+    // Using a quadratic bezier curve for a simple, modern arc.
+    const midX = (startX + endX) / 2;
+    const midY = (startY + endY) / 2;
+    const curveAmount = 0.2;
+    const controlX = midX + (startY - endY) * curveAmount;
+    const controlY = midY + (endX - startX) * curveAmount;
 
-  // === Enhanced responsive node positioning ===
-  const getNodePosition = (activityId: string) => {
-    switch (activityId) {
-      case "nedum":
-        return { top: "60%", left: "50%" };
-      case "munnar":
-        return { 
-          top: isMobile ? "18%" : "15%", 
-          left: isMobile ? "22%" : "20%" 
-        };
-      case "thekkady":
-        return { 
-          top: isMobile ? "83%" : "85%", 
-          left: isMobile ? "83%" : "85%" 
-        };
-      case "ramakkalmedu":
-        return { 
-          top: isMobile ? "47%" : "45%", 
-          left: isMobile ? "83%" : "85%" 
-        };
-      case "vagamon":
-        return { 
-          top: isMobile ? "90%" : "92%", 
-          left: isMobile ? "17%" : "15%" 
-        };
-      case "idukki-dam":
-        return { 
-          top: isMobile ? "42%" : "40%", 
-          left: isMobile ? "17%" : "15%" 
-        };
-      default:
-        return { top: "50%", left: "50%" };
-    }
+    return `M ${startX} ${startY} Q ${controlX} ${controlY} ${endX} ${endY}`;
   };
 
   const handleNodeClick = (nodeId: string) => {
@@ -193,7 +112,7 @@ const NearbyMap: React.FC = () => {
           <div className={`mx-auto ${isMobile ? 'w-16 h-1' : 'w-24 md:w-32 h-1.5'} bg-gradient-to-r from-emerald-500 via-amber-500 to-emerald-500 rounded-full animate-expand shadow-lg`}></div>
         </div>
 
-        <div className={`relative w-full ${isMobile ? 'h-[75vh]' : 'h-[60vh] md:h-[80vh] lg:h-[90vh]'} bg-transparent`}>
+        <div className={`relative w-full ${isMobile ? 'h-[100vh]' : 'h-[60vh] md:h-[80vh] lg:h-[90vh]'} bg-transparent`}>
           {/* SVG Path Layer with enhanced responsive curved paths */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none"
@@ -283,17 +202,17 @@ const NearbyMap: React.FC = () => {
                 animateIn ? 'opacity-100 scale-100' : 'opacity-0 scale-50'
               }`}
               style={{ 
-                top: "60%", 
-                left: "50%", 
+                top: nedumNode.coords.top, 
+                left: nedumNode.coords.left, 
                 transform: "translate(-50%, -50%)",
                 transitionDelay: '800ms'
               }}
             >
               <div
                 className="flex flex-col items-center group cursor-pointer"
-                onMouseEnter={() => setActiveNode("nedum")}
+                onMouseEnter={() => setActiveNode("nedumkandam")}
                 onMouseLeave={() => setActiveNode(null)}
-                onClick={() => handleNodeClick("nedum")}
+                onClick={() => handleNodeClick("nedumkandam")}
               >
                 <div className={`relative ${isMobile ? 'w-20 h-20' : 'w-36 h-36 md:w-40 md:h-40'} rounded-full shadow-2xl bg-gradient-to-br from-white via-emerald-50 to-white border-2 border-emerald-200 flex items-center justify-center transition-all duration-700 overflow-hidden group-hover:shadow-3xl group-hover:scale-115 group-hover:border-emerald-300`}>
                   {/* Enhanced pulsing waves for the root node */}
@@ -304,7 +223,7 @@ const NearbyMap: React.FC = () => {
                   
                   <img
                     src={nedumNode.icon}
-                    alt={nedumNode.label}
+                    alt={nedumNode.name}
                     className="w-full h-full object-cover rounded-full relative z-10 transition-transform duration-700 group-hover:scale-110"
                   />
                   
@@ -312,7 +231,7 @@ const NearbyMap: React.FC = () => {
                   <div className="absolute inset-0 rounded-full bg-gradient-to-t from-emerald-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                 </div>
                 <div className="mt-2 text-center">
-                  <span className={`block ${isMobile ? 'text-base' : 'text-xl md:text-2xl'} font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent group-hover:from-emerald-800 group-hover:to-emerald-700 transition-all duration-300`}>{nedumNode.label}</span>
+                  <span className={`block ${isMobile ? 'text-base' : 'text-xl md:text-2xl'} font-bold bg-gradient-to-r from-emerald-700 to-emerald-600 bg-clip-text text-transparent group-hover:from-emerald-800 group-hover:to-emerald-700 transition-all duration-300`}>{nedumNode.name}</span>
                   <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-emerald-500 font-semibold animate-pulse`}>✨ Your Gateway ✨</span>
                 </div>
               </div>
@@ -321,7 +240,6 @@ const NearbyMap: React.FC = () => {
 
           {/* Enhanced Destination Nodes */}
           {destinationNodes.map((activity, idx) => {
-            const position = getNodePosition(activity.id);
             return (
               <div
                 key={activity.id}
@@ -329,8 +247,8 @@ const NearbyMap: React.FC = () => {
                   animateIn ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-50 translate-y-12'
                 }`}
                 style={{
-                  top: position.top,
-                  left: position.left,
+                  top: activity.coords.top,
+                  left: activity.coords.left,
                   transform: "translate(-50%, -50%)",
                   transitionDelay: `${idx * 200 + 1200}ms`,
                 }}
@@ -346,7 +264,7 @@ const NearbyMap: React.FC = () => {
 
                   <img
                     src={activity.icon}
-                    alt={activity.label}
+                    alt={activity.name}
                     className="w-full h-full object-cover rounded-full relative z-10 transition-transform duration-700 group-hover:scale-110"
                   />
                   
@@ -354,7 +272,7 @@ const NearbyMap: React.FC = () => {
                   <div className="absolute inset-0 rounded-full bg-gradient-to-t from-amber-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
                 </div>
                 <div className="text-center mt-2">
-                  <span className={`block font-bold bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent group-hover:from-amber-700 group-hover:to-amber-600 transition-all duration-300 ${isMobile ? 'text-sm' : 'text-base md:text-lg'}`}>{activity.label}</span>
+                  <span className={`block font-bold bg-gradient-to-r from-slate-800 to-slate-700 bg-clip-text text-transparent group-hover:from-amber-700 group-hover:to-amber-600 transition-all duration-300 ${isMobile ? 'text-sm' : 'text-base md:text-lg'}`}>{activity.name}</span>
                   {activity.distance && (
                     <span className={`inline-block ${isMobile ? 'text-xs' : 'text-sm'} mt-1 text-amber-600 rounded-lg px-2 md:px-3 py-1 bg-gradient-to-r from-amber-100/80 to-amber-200/60 group-hover:from-amber-200/90 group-hover:to-amber-300/70 transition-all duration-300 shadow-sm`}>{activity.distance}</span>
                   )}
@@ -363,7 +281,7 @@ const NearbyMap: React.FC = () => {
                 {/* Enhanced mobile-optimized popup */}
                 {activeNode === activity.id && (
                   <div className={`absolute left-1/2 top-full mt-3 -translate-x-1/2 z-50 ${isMobile ? 'w-48' : 'w-56'} bg-white/95 backdrop-blur-md border border-slate-200/60 rounded-2xl shadow-2xl p-4 md:p-5 animate-fade-in-up select-none`}>
-                    <div className={`font-bold text-slate-900 mb-2 ${isMobile ? 'text-base' : 'text-lg'}`}>{activity.label}</div>
+                    <div className={`font-bold text-slate-900 mb-2 ${isMobile ? 'text-base' : 'text-lg'}`}>{activity.name}</div>
                     {activity.highlights && (
                       <div className={`text-slate-700 mb-3 ${isMobile ? 'text-sm' : 'text-base'} leading-relaxed`}>{activity.highlights[0]}</div>
                     )}
@@ -371,9 +289,9 @@ const NearbyMap: React.FC = () => {
                       {activity.distance && <span className="flex items-center gap-1">📏 {activity.distance}</span>}
                       {activity.time && <span className="flex items-center gap-1">⏱ {activity.time}</span>}
                     </div>
-                    {activity.id !== "nedum" && (
+                    {activity.id !== "nedumkandam" && (
                       <a
-                        href={`https://wa.me/919495107933?text=${encodeURIComponent(`Planning to visit ${activity.label}`)}`}
+                        href={`https://wa.me/919495107933?text=${encodeURIComponent(`Planning to visit ${activity.name}`)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className={`block w-full ${isMobile ? 'py-3 text-sm' : 'py-3 text-base'} mt-2 rounded-xl bg-gradient-to-r from-emerald-500 via-emerald-600 to-emerald-500 hover:from-emerald-600 hover:via-emerald-700 hover:to-emerald-600 text-white text-center font-bold transition-all duration-500 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl`}
@@ -412,7 +330,7 @@ const NearbyMap: React.FC = () => {
         {isMobile && (
           <div className="px-4 pb-6">
             <div className="grid gap-4 mt-6">
-              {activities.slice(0, 3).map((activity, index) => (
+              {nearby.slice(0, 3).map((activity, index) => (
                 <div
                   key={activity.id}
                   className={`bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-100 p-4 transition-all duration-900 transform ${
@@ -424,19 +342,19 @@ const NearbyMap: React.FC = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div className={`w-12 h-12 rounded-2xl overflow-hidden shadow-lg ${
-                      activity.id === "nedum" 
+                      activity.id === "nedumkandam" 
                         ? "bg-gradient-to-br from-emerald-500 to-emerald-600" 
                         : "bg-gradient-to-br from-amber-500 to-orange-500"
                     }`}>
                       <img
                         src={activity.icon}
-                        alt={activity.label}
+                        alt={activity.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <div className="flex-1">
                       <h3 className="text-sm font-bold text-slate-900 mb-1">
-                        {activity.label}
+                        {activity.name}
                       </h3>
                       {activity.distance && activity.time && (
                         <div className="flex items-center gap-3 mt-1">
