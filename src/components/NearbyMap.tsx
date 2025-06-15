@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { activities } from "../data/activities";
 
@@ -25,48 +24,62 @@ const NearbyMap: React.FC = () => {
   const nedumNode = activities.find(a => a.id === "nedum");
   const destinationNodes = activities.filter(a => a.id !== "nedum");
 
-  // === Enhanced path generation with realistic curved roads ===
+  // === Enhanced responsive path generation ===
   const generatePath = (destination: any) => {
     if (!nedumNode || destination.id === "nedum") return "";
     const startX = 50;
     const startY = 60;
     let pathString = "";
 
+    // Responsive path adjustments
+    const mobileOffset = isMobile ? 2 : 0;
+    const curveIntensity = isMobile ? 0.8 : 1;
+
     switch (destination.id) {
       case "munnar":
-        // Path going up and left to match node position
+        // Path going up and left - responsive positioning
+        const munnarEndX = isMobile ? 22 : 20;
+        const munnarEndY = isMobile ? 18 : 15;
         pathString = `M ${startX} ${startY} 
-                     Q 45 50, 40 40 
-                     Q 35 30, 30 25 
-                     Q 25 20, 20 15`;
+                     Q ${45 - mobileOffset} ${50 * curveIntensity}, ${40 - mobileOffset} ${40 * curveIntensity} 
+                     Q ${35 - mobileOffset} ${30 * curveIntensity}, ${30 - mobileOffset} ${25 * curveIntensity} 
+                     Q ${25 - mobileOffset} ${20 * curveIntensity}, ${munnarEndX} ${munnarEndY}`;
         break;
       case "thekkady":
-        // Path going down and right to match node position
+        // Path going down and right - responsive positioning
+        const thekkadyEndX = isMobile ? 83 : 85;
+        const thekkadyEndY = isMobile ? 83 : 85;
         pathString = `M ${startX} ${startY} 
-                     Q 60 65, 70 70 
-                     Q 75 75, 80 80 
-                     Q 82 82, 85 85`;
+                     Q ${60 + mobileOffset} ${65 * curveIntensity}, ${70 + mobileOffset} ${70 * curveIntensity} 
+                     Q ${75 + mobileOffset} ${75 * curveIntensity}, ${80 + mobileOffset} ${80 * curveIntensity} 
+                     Q ${82 + mobileOffset} ${82 * curveIntensity}, ${thekkadyEndX} ${thekkadyEndY}`;
         break;
       case "ramakkalmedu":
-        // Path going right and slightly up to match node position
+        // Path going right and slightly up - responsive positioning
+        const ramakkalmeduEndX = isMobile ? 83 : 85;
+        const ramakkalmeduEndY = isMobile ? 47 : 45;
         pathString = `M ${startX} ${startY} 
-                     Q 58 58, 65 55 
-                     Q 72 52, 78 48 
-                     Q 82 46, 85 45`;
+                     Q ${58 + mobileOffset} ${58 * curveIntensity}, ${65 + mobileOffset} ${55 * curveIntensity} 
+                     Q ${72 + mobileOffset} ${52 * curveIntensity}, ${78 + mobileOffset} ${48 * curveIntensity} 
+                     Q ${82 + mobileOffset} ${46 * curveIntensity}, ${ramakkalmeduEndX} ${ramakkalmeduEndY}`;
         break;
       case "vagamon":
-        // Path going down and left to match node position
+        // Path going down and left - responsive positioning
+        const vagamonEndX = isMobile ? 17 : 15;
+        const vagamonEndY = isMobile ? 90 : 92;
         pathString = `M ${startX} ${startY} 
-                     Q 42 68, 35 75 
-                     Q 28 82, 22 88 
-                     Q 18 90, 15 92`;
+                     Q ${42 - mobileOffset} ${68 * curveIntensity}, ${35 - mobileOffset} ${75 * curveIntensity} 
+                     Q ${28 - mobileOffset} ${82 * curveIntensity}, ${22 - mobileOffset} ${88 * curveIntensity} 
+                     Q ${18 - mobileOffset} ${90 * curveIntensity}, ${vagamonEndX} ${vagamonEndY}`;
         break;
       case "idukki-dam":
-        // Path going left and slightly up to match node position
+        // Path going left and slightly up - responsive positioning
+        const idukkiEndX = isMobile ? 17 : 15;
+        const idukkiEndY = isMobile ? 42 : 40;
         pathString = `M ${startX} ${startY} 
-                     Q 42 58, 35 55 
-                     Q 28 52, 22 48 
-                     Q 18 44, 15 40`;
+                     Q ${42 - mobileOffset} ${58 * curveIntensity}, ${35 - mobileOffset} ${55 * curveIntensity} 
+                     Q ${28 - mobileOffset} ${52 * curveIntensity}, ${22 - mobileOffset} ${48 * curveIntensity} 
+                     Q ${18 - mobileOffset} ${44 * curveIntensity}, ${idukkiEndX} ${idukkiEndY}`;
         break;
       default:
         return "";
@@ -75,20 +88,36 @@ const NearbyMap: React.FC = () => {
     return pathString;
   };
 
+  // === Enhanced responsive node positioning ===
   const getNodePosition = (activityId: string) => {
     switch (activityId) {
       case "nedum":
         return { top: "60%", left: "50%" };
       case "munnar":
-        return { top: "15%", left: "20%" }; // Matches path endpoint
+        return { 
+          top: isMobile ? "18%" : "15%", 
+          left: isMobile ? "22%" : "20%" 
+        };
       case "thekkady":
-        return { top: "85%", left: "85%" }; // Matches path endpoint
+        return { 
+          top: isMobile ? "83%" : "85%", 
+          left: isMobile ? "83%" : "85%" 
+        };
       case "ramakkalmedu":
-        return { top: "45%", left: "85%" }; // Matches path endpoint
+        return { 
+          top: isMobile ? "47%" : "45%", 
+          left: isMobile ? "83%" : "85%" 
+        };
       case "vagamon":
-        return { top: "92%", left: "15%" }; // Matches path endpoint
+        return { 
+          top: isMobile ? "90%" : "92%", 
+          left: isMobile ? "17%" : "15%" 
+        };
       case "idukki-dam":
-        return { top: "40%", left: "15%" }; // Matches path endpoint
+        return { 
+          top: isMobile ? "42%" : "40%", 
+          left: isMobile ? "17%" : "15%" 
+        };
       default:
         return { top: "50%", left: "50%" };
     }
@@ -165,7 +194,7 @@ const NearbyMap: React.FC = () => {
         </div>
 
         <div className={`relative w-full ${isMobile ? 'h-[75vh]' : 'h-[60vh] md:h-[80vh] lg:h-[90vh]'} bg-transparent`}>
-          {/* SVG Path Layer with enhanced curved paths */}
+          {/* SVG Path Layer with enhanced responsive curved paths */}
           <svg
             className="absolute inset-0 w-full h-full pointer-events-none"
             viewBox="0 0 100 100"
